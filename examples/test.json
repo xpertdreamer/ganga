@@ -1,0 +1,11 @@
+{
+  "properties": {
+    "1": { "type": "bool", "description": "Есть грива" },
+    "2": { "type": "bool", "description": "Умеет дышать под водой" },
+    "3": { "type": "bool", "description": "Есть зубы" }
+  },
+  "objects": {
+    "lion": { "properties": [1, 3], "description": "Лев" },
+    "fish": { "properties": [2], "description": "Рыба" }
+  }
+}
