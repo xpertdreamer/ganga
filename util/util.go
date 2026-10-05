@@ -38,7 +38,7 @@ func Debug(format string, a ...any) {
 }
 
 func Error(format string, a ...any) {
-	errorLogger.Fatalf(format, a...)
+	errorLogger.Printf(format, a...)
 }
 
 func Measure(name string) func() {
