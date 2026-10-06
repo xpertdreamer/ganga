@@ -1,18 +1,52 @@
 package main
 
 import (
-	"ganga/ui"
+	"ganga/back"
+	"ganga/util"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+
+	"io"
 )
 
 func main() {
 	a := app.NewWithID("com.ganga")
 	w := a.NewWindow("ganga")
-	fd := ui.CreateFileDialog(w, a)
+
+	kb := &back.KBase{}
+	fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+		if err != nil {
+			util.Error("%s", err)
+			a.Quit()
+			return
+		}
+		if reader == nil {
+			util.Error("No file selected or dialog closed")
+			return
+		}
+		defer reader.Close()
+
+		util.Debug("Selected: %s", reader.URI().Path())
+
+		data, err := io.ReadAll(reader)
+		if err != nil {
+			util.Error("Error reading file: %s", err)
+			a.Quit()
+			return
+		}
+
+		util.Debug("Content: %s", string(data))
+		if err := kb.Parse(data); err != nil {
+			util.Error("cannot parse data")
+			a.Quit()
+			return
+		}
+	}, w)
+
 	welcomeLabel := widget.NewLabelWithStyle(
 		"Добро пожаловать в Ganga!",
 		fyne.TextAlignCenter,
@@ -20,6 +54,7 @@ func main() {
 	)
 	openBtn := widget.NewButton("File Manager", func() {
 		fd.Show()
+
 	})
 	mainTabContent := container.NewVBox(
 		welcomeLabel,
@@ -35,5 +70,6 @@ func main() {
 		container.NewTabItem("Загрузка базы знаний", dbTabContent))
 	w.SetContent(tabs)
 	w.Resize(fyne.NewSize(800, 600))
-	w.ShowAndRun()
+	w.Show()
+	a.Run()
 }
