@@ -3,6 +3,7 @@ package main
 import (
 	"ganga/back"
 	"ganga/util"
+	"ganga/ui"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -16,6 +17,8 @@ import (
 func main() {
 	a := app.NewWithID("com.ganga")
 	w := a.NewWindow("ganga")
+
+	content := widget.NewLabel("")
 
 	kb := &back.KBase{}
 	fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
@@ -45,6 +48,7 @@ func main() {
 			a.Quit()
 			return
 		}
+		content.SetText(ui.CreatePreview(kb))
 	}, w)
 
 	welcomeLabel := widget.NewLabelWithStyle(
@@ -60,14 +64,22 @@ func main() {
 		welcomeLabel,
 		widget.NewSeparator(),
 	)
+
+	scroll := container.NewScroll(content)
+	scroll.SetMinSize(fyne.NewSize(600, 400))
+
 	dbTabContent := container.NewVBox(
 		widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		widget.NewSeparator(),
 		container.NewCenter(openBtn),
+		container.NewCenter(scroll),
+		// TODO: db viewer
 	)
+
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Главная", mainTabContent),
 		container.NewTabItem("Загрузка базы знаний", dbTabContent))
+
 	w.SetContent(tabs)
 	w.Resize(fyne.NewSize(800, 600))
 	w.Show()

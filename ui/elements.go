@@ -1,38 +1,32 @@
 package ui
 
 import (
-	"io"
-
-	"ganga/util"
-
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/dialog"
+	"fmt"
+	"ganga/back"
+	"strings"
 )
 
-func CreateFileDialog(window fyne.Window, appInstance fyne.App) *dialog.FileDialog {
-	fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
-		if err != nil {
-			util.Error("%s", err)
-			appInstance.Quit()
-			return
-		}
-		if reader == nil {
-			util.Error("No file selected or dialog closed")
-			return
-		}
-		defer reader.Close()
+func CreatePreview(k* back.KBase) string {
+	var sb strings.Builder
+	sb.Grow(512)
 
-		util.Debug("Selected: %s", reader.URI().Path())
+	sb.WriteString("Objects : \n\n")
+	for _, obj := range k.Objects {
+		sb.WriteString("\t")
+		sb.WriteString(obj.Description)
+		sb.WriteString(" ")
+		fmt.Fprintf(&sb, "%v", obj.Properties)
+		sb.WriteString(",\n\n")
+	}
 
-		data, err := io.ReadAll(reader)
-		if err != nil {
-			util.Error("Error reading file: %s", err)
-			appInstance.Quit()
-			return
-		}
+	sb.WriteString("Properties : \n\n")
+	for _, prop := range k.Properties {
+		sb.WriteString("\t")
+		sb.WriteString(prop.ID)
+		sb.WriteString(":")
+		sb.WriteString(prop.Description)
+		sb.WriteString(",\n")
+	}
 
-		util.Debug("Content: %s", string(data))
-	}, window)
-
-	return fd
+	return sb.String()
 }
