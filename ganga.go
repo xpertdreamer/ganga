@@ -58,11 +58,22 @@ func main() {
 	)
 	openBtn := widget.NewButton("File Manager", func() {
 		fd.Show()
-
 	})
+	var popUp *widget.PopUp
+	popUpContent := container.NewVBox(
+		widget.NewLabel("TODO: start button"),
+		widget.NewButton("Close", func() {
+			popUp.Hide()
+		}),
+	)
+	popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
+	startBtn := widget.NewButton("Start", func() { util.Debug("TODO: start button"); popUp.Show()})
+
+
 	mainTabContent := container.NewVBox(
 		welcomeLabel,
 		widget.NewSeparator(),
+		container.NewCenter(startBtn),
 	)
 
 	scroll := container.NewScroll(content)
