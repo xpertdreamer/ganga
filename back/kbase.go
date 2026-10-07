@@ -20,7 +20,6 @@ type RAW struct {
 type KBase struct {
 	Properties map[string]Property
 	Objects map[string]Object
-	// TODO: procentiles
 }
 
 func (k* KBase)HasProperty(objId string, propId string) (bool, error) {
@@ -39,7 +38,7 @@ func (k* KBase)HasProperty(objId string, propId string) (bool, error) {
 func (k* KBase)Parse(data []byte) error {
 	var raw RAW
 	if err := json.Unmarshal(data, &raw); err != nil {
-		util.Error("kbase unmarshall: %w", err)
+		util.Error("kbase unmarshall: %s", err.Error())
 		return errors.New("kbase unmarshall error")
 	}
 	k.Properties = make(map[string]Property, len(raw.Properties))
