@@ -25,6 +25,18 @@ func (e* Engine)Start() error {
 	if e == nil {
 		return errors.New("cant deal with nil pointer engine")
 	}
-
+	e.run = true
 	return nil
+}
+
+func (e* Engine)Stop() error {
+	if e == nil {
+		return errors.New("cant deal with nil pointer engine")
+	}
+	e.run = false
+	return nil
+}
+
+func (e* Engine)IsRunning() bool {
+	return e.run
 }

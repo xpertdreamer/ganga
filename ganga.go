@@ -21,6 +21,13 @@ func main() {
 	content := widget.NewLabel("")
 
 	kb := &back.KBase{}
+	engine := &back.Engine{}
+	if err := engine.Create(kb); err != nil {
+		util.Error("%s", err.Error())
+		a.Quit()
+		return
+	}
+
 	fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 		if err != nil {
 			util.Error("%s", err)
@@ -59,16 +66,28 @@ func main() {
 	openBtn := widget.NewButton("File Manager", func() {
 		fd.Show()
 	})
-	var popUp *widget.PopUp
-	popUpContent := container.NewVBox(
-		widget.NewLabel("TODO: start button"),
-		widget.NewButton("Close", func() {
-			popUp.Hide()
-		}),
-	)
-	popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
-	startBtn := widget.NewButton("Start", func() { util.Debug("TODO: start button"); popUp.Show()})
+	// var popUp *widget.PopUp
+	// popUpContent := container.NewVBox(
+	// 	widget.NewLabel("TODO: start button"),
+	// 	widget.NewButton("Close", func() {
+	// 		popUp.Hide()
+	// 	}),
+	// )
+	// popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
 
+	question :=	widget.NewLabel("Question")
+	prevButton := widget.NewButton("Previous", func() {util.Debug("TODO: previous")})
+	nextButton := widget.NewButton("Next", func() {util.Debug("TODO: next")})
+
+	gameTabContent := container.NewVBox(
+		container.NewCenter(question),
+		widget.NewSeparator(),
+		container.NewCenter(container.NewHBox(prevButton, nextButton)),
+	)
+
+	var tabs* container.AppTabs
+
+	startBtn := widget.NewButton("Start", func() { util.Debug("TODO: start button"); engine.Start(); tabs.EnableIndex(2); tabs.SelectIndex(2)})
 
 	mainTabContent := container.NewVBox(
 		welcomeLabel,
@@ -87,9 +106,12 @@ func main() {
 		// TODO: db viewer
 	)
 
-	tabs := container.NewAppTabs(
+	tabs = container.NewAppTabs(
 		container.NewTabItem("Главная", mainTabContent),
-		container.NewTabItem("Загрузка базы знаний", dbTabContent))
+		container.NewTabItem("Загрузка базы знаний", dbTabContent),
+		container.NewTabItem("Игра", gameTabContent),
+	)
+	tabs.DisableIndex(2)
 
 	w.SetContent(tabs)
 	w.Resize(fyne.NewSize(800, 600))
