@@ -138,8 +138,11 @@ func main() {
 		} else {
 			var builder strings.Builder
 			builder.WriteString("Я думаю, это: ")
-			for _, w := range winners {
+			for i, w := range winners {
 				builder.WriteString(engine.Base.Objects[w].Description)
+				if i != len(winners) - 1 {
+					builder.WriteString(", ")
+				}
 			}
 			resultText = builder.String()
 		}

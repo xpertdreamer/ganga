@@ -172,7 +172,7 @@ func (e* Engine)GetResult() ([]string, error) {
 	}
 
 	for objKey, percent := range currentPercents {
-		if percent == max {
+		if int(percent) == int(max) {
 			resultIdx = append(resultIdx, objKey)
 		}
 	}
