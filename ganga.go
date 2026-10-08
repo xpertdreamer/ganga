@@ -47,6 +47,14 @@ func main() {
 		return
 	}
 
+	exitBtn := widget.NewButton("Выход", func() {
+		dialog.ShowConfirm("Подтверждение выхода", "Вы уверены, что хотите выйти?", func(confirmed bool) {
+			if confirmed {
+				a.Quit()
+			}
+		}, w)
+	})
+
 	fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
 		if err != nil {
 			util.Error("%s", err)
@@ -78,11 +86,11 @@ func main() {
 	}, w)
 
 	welcomeLabel := widget.NewLabelWithStyle(
-		"Добро пожаловать в Ganga!",
+		"Добро пожаловать в ganga!",
 		fyne.TextAlignCenter,
 		fyne.TextStyle{Bold: true},
 	)
-	openBtn := widget.NewButton("File Manager", func() {
+	openBtn := widget.NewButton("Загрузить из...", func() {
 		fd.Show()
 	})
 
@@ -154,25 +162,25 @@ func main() {
 		tabs.SelectIndex(3)
 	}
 
-	yesButton := widget.NewButton("Yes", func(){
+	yesButton := widget.NewButton("Да", func(){
 		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerYes) {
 			showResults()
 		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
-	noButton := widget.NewButton("No", func(){
+	noButton := widget.NewButton("Нет", func(){
 		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerNo) {
 			showResults()
 		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
-	idkButton := widget.NewButton("IDK", func(){
+	idkButton := widget.NewButton("Не знаю", func(){
 		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerUnknown) {
 			showResults()
 		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
-	prevButton := widget.NewButton("Previous", func() {
+	prevButton := widget.NewButton("Назад", func() {
 		ui.HandleButtonPrev(engine, question, numQuestion)
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
@@ -189,7 +197,7 @@ func main() {
 	)
 	gameTabContent := container.NewCenter(mainLayout)
 
-	startBtn := widget.NewButton("Start", func() {
+	startBtn := widget.NewButton("Начать", func() {
 		if len(engine.Base.Properties) == 0 {
 			dialog.ShowInformation("Внимание!", "Сначала загрузите, или создайте базу знаний", w)
 			return
@@ -203,6 +211,7 @@ func main() {
 	mainTabContent := container.NewVBox(
 		welcomeLabel,
 		container.NewCenter(startBtn),
+		container.NewCenter(exitBtn),
 	)
 	mainTabContentCentered := container.NewCenter(mainTabContent)
 
