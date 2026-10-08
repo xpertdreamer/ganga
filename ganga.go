@@ -15,20 +15,36 @@ import (
 	"io"
 )
 
-func handleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Label) {
+func handleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Label, answer back.Answer) {
 	if e == nil {
 		util.Error("cant deal with nil pointers")
 		return
 	}
 	util.Debug("state pointer: %d", e.StatePoiner)
 	util.Debug("questions: %v", e.Questions)
-	util.Debug("props: %v", e.Base.Properties)
-	if e.StatePoiner < uint64(len(e.Questions) - 1) {
-		e.StatePoiner += 1
-		quest.SetText((e.Base.Properties[e.Questions[e.StatePoiner]].Description) + "?")
-		numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
+	if e.StatePoiner >= uint64(len(e.Questions)) {
+		util.Debug("All questions are already answered")
+		return
 	}
+
+	currentKey := e.Questions[e.StatePoiner]
+	currentProp := e.Base.Properties[currentKey]
+
+	e.RecalculatePercents(currentProp, answer)
+
+	if e.StatePoiner < uint64(len(e.Questions)) {
+		nextKey := e.Questions[e.StatePoiner]
+		nextProp := e.Base.Properties[nextKey]
+		quest.SetText(nextProp.Description + "?")
+		numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
+	} else {
+		quest.SetText("Тест завершен! Результаты рассчитаны.")
+		numQuest.SetText("-")
+	}
+	util.Debug("new state pointer: %d", e.StatePoiner)
+	util.Debug("recalculated percents: %v", e.States[e.StatePoiner].Percents)
 }
+
 
 func main() {
 	a := app.NewWithID("com.ganga")
@@ -95,13 +111,13 @@ func main() {
 	numQuestion := widget.NewLabel("1")
 	question :=	widget.NewLabel("Question")
 	yesButton := widget.NewButton("Yes", func(){
-		handleButtonNext(engine, question, numQuestion)
+		handleButtonNext(engine, question, numQuestion, back.AnswerYes)
 	})
 	noButton := widget.NewButton("No", func(){
-		handleButtonNext(engine, question, numQuestion)
+		handleButtonNext(engine, question, numQuestion, back.AnswerNo)
 	})
 	idkButton := widget.NewButton("IDK", func(){
-		handleButtonNext(engine, question, numQuestion)
+		handleButtonNext(engine, question, numQuestion, back.AnswerUnknown)
 	})
 	prevButton := widget.NewButton("Previous", func() {util.Debug("TODO: previous")})
 

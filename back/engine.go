@@ -7,6 +7,14 @@ import (
 	"time"
 )
 
+type Answer int
+
+const (
+	AnswerUnknown Answer = iota
+	AnswerYes
+	AnswerNo					
+)
+
 type State struct {
 	Id int64
 	Percents map[string]float64
@@ -32,8 +40,6 @@ func (e* Engine)Create(k* KBase) error {
 	return nil
 }
 
-// TODO: in func { traverse 'Percents' and check if Object in KBase with key [string] have property 'x' -> do smth with procentiles}
-
 func GetRandomKeys(kb *KBase, count int) []string {
 	if len(kb.Properties) == 0 || count <= 0 {
 		return nil
@@ -57,7 +63,57 @@ func GetRandomKeys(kb *KBase, count int) []string {
 }
 
 
-// func (e* Engine)NextQuestion()
+func (e* Engine)RecalculatePercents(p Property, answer Answer) {
+	currentState := e.States[e.StatePoiner]
+	nextPercents := make(map[string]float64, len(currentState.Percents))
+	for k, v := range currentState.Percents {
+		nextPercents[k] = v
+	}
+	var factor = 100.0 / float64(len(e.Base.Objects))
+	var targetDivisor float64 = (100.0 - factor) / 100.0
+	var totalWeight float64
+	for objKey, currentPercent := range nextPercents {
+		hasProp, err := e.Base.HasProperty(objKey, p.ID)
+		if err != nil {
+			util.Error("some error occured during recalculation")
+			return
+		}
+		var multiplier float64 = 1.0
+		switch answer {
+		case AnswerYes:
+			if hasProp {
+				multiplier = 1.0 + (factor / 100.0)
+			} else {
+				multiplier = targetDivisor
+			}
+		case AnswerNo:
+			if !hasProp {
+				multiplier = 1.0 + (factor / 100.0)
+			} else {
+				multiplier = targetDivisor
+			}
+		}
+		newPercent := currentPercent * multiplier
+		nextPercents[objKey] = newPercent
+		totalWeight += newPercent
+	}
+
+	if totalWeight > 0 {
+		for objKey := range nextPercents {
+			nextPercents[objKey] = (nextPercents[objKey] / totalWeight) * 100.0
+		}
+	}
+
+	nextId := currentState.Id + 1
+
+	nextState := State{
+		Id:       nextId,
+		Percents: nextPercents,
+	}
+	e.States = append(e.States, nextState)
+
+	e.StatePoiner = uint64(nextId)
+}
 
 func (e* Engine)Start() error {
 	if e == nil {
@@ -72,6 +128,20 @@ func (e* Engine)Start() error {
 	e.Questions = GetRandomKeys(e.Base, initialNumQuest)
 	e.StatePoiner = 0
 	util.Debug("initial questions: %d", initialNumQuest)
+	count := len(e.Base.Objects)
+	initialPercents := make(map[string]float64, count)
+	var startValue float64 = 0.0
+	if count > 0 {
+		startValue = 100.0 / float64(count)
+	}
+	for objKey := range e.Base.Objects {
+		initialPercents[objKey] = startValue
+	}
+	firstState := State{
+		Id: 0,
+		Percents: initialPercents,
+	}
+	e.States = append(e.States, firstState)
 	return nil
 }
 
