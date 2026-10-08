@@ -96,16 +96,16 @@ func ChooseMaskotRand(maskot *canvas.Image, cache MascotPaths) {
 	maskot.Refresh()
 }
 
-func HandleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Label, answer back.Answer) {
+func HandleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Label, answer back.Answer) bool {
 	if e == nil {
 		util.Error("cant deal with nil pointers")
-		return
+		return false
 	}
 	util.Debug("state pointer: %d", e.StatePoiner)
 	util.Debug("questions: %v", e.Questions)
 	if e.StatePoiner >= uint64(len(e.Questions)) {
 		util.Debug("All questions are already answered")
-		return
+		return false
 	}
 
 	currentKey := e.Questions[e.StatePoiner]
@@ -119,11 +119,14 @@ func HandleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Labe
 		quest.SetText(nextProp.Description + "?")
 		numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
 	} else {
-		quest.SetText("Тест завершен! Результаты рассчитаны.")
-		numQuest.SetText("-")
+		quest.SetText("")
+		numQuest.SetText("")
+		return true
 	}
 	util.Debug("new state pointer: %d", e.StatePoiner)
 	util.Debug("recalculated percents: %v", e.States[e.StatePoiner].Percents)
+
+	return false
 }
 
 func HandleButtonPrev(e* back.Engine, quest *widget.Label, numQuest *widget.Label) {

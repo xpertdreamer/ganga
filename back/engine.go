@@ -22,7 +22,6 @@ type State struct {
 
 type Engine struct {
 	Base *KBase
-	run bool
 	Questions []string
 	States []State
 	StatePoiner uint64
@@ -36,7 +35,6 @@ func (e* Engine)Create(k* KBase) error {
 		return errors.New("cant create engine from nil pointer")
 	}
 	e.Base = k
-	e.run = false
 	return nil
 }
 
@@ -122,7 +120,6 @@ func (e* Engine)Start() error {
 	if e == nil {
 		return errors.New("cant deal with nil pointer engine")
 	}
-	e.run = true
 	initialNumQuest := len(e.Base.Properties)
 	switch {
 	case initialNumQuest > 50: initialNumQuest = int(float64(initialNumQuest) * 0.25)
@@ -148,14 +145,23 @@ func (e* Engine)Start() error {
 	return nil
 }
 
-func (e* Engine)Stop() error {
+func (e* Engine)GetResult() ([]string, error) {
 	if e == nil {
-		return errors.New("cant deal with nil pointer engine")
+		return nil, errors.New("cant deal with nil pointer engine")
 	}
-	e.run = false
-	return nil
-}
+	currentPercents := e.States[e.StatePoiner].Percents
 
-func (e* Engine)IsRunning() bool {
-	return e.run
+	var maxPercent float64 = 50.0
+	var resultIdx []string
+
+	for objKey, percent := range currentPercents {
+		if percent > maxPercent {
+			maxPercent = percent
+			resultIdx = []string{objKey}
+		} else if percent == maxPercent && percent > 50.0 {
+			resultIdx = append(resultIdx, objKey)
+		}
+	}
+
+	return resultIdx, nil
 }

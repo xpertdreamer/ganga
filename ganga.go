@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"io"
+	"strings"
 )
 
 func main() {
@@ -27,6 +28,7 @@ func main() {
 	}
 
 	content := widget.NewLabel("")
+	var tabs* container.AppTabs
 
 	kb := &back.KBase{}
 	engine := &back.Engine{}
@@ -86,20 +88,72 @@ func main() {
 
 	maskot := canvas.NewImageFromResource(mascotPaths.Happy)
 	maskot.FillMode = canvas.ImageFillContain
-	maskot.SetMinSize(fyne.NewSize(150, 150))
+	maskot.SetMinSize(fyne.NewSize(250, 250))
 
 	numQuestion := widget.NewLabel("1")
 	question :=	widget.NewLabel("Question")
+
+	gameScreenWrapper := container.NewStack()
+	showResults := func() {
+		winners, err := engine.GetResult()
+		if err != nil {
+			util.Error("error in result")
+			a.Quit()
+			return
+		}
+		var resultText string
+
+		if len(winners) == 0 {
+			resultText = "Не удалось точно определить объект"
+		} else {
+			var builder strings.Builder
+			builder.WriteString("Я думаю, это: ")
+			for _, w := range winners {
+				builder.WriteString(engine.Base.Objects[w].Description)
+			}
+			resultText = builder.String()
+			// resultText = "Я думаю, это: " + strings.Join(engine.Base.Objects[], ", ")
+		}
+
+		resultLabel := widget.NewLabelWithStyle(
+			resultText,
+			fyne.TextAlignCenter,
+			fyne.TextStyle{Bold: true, Italic: true},
+		)
+
+		restartBtn := widget.NewButton("На главную", func() {
+			tabs.SelectIndex(0)
+		})
+		// nextBtn := widget.NewButton("Продолжить", func)
+
+		resultsLayout := container.NewCenter(
+			container.NewVBox(
+				widget.NewLabelWithStyle("Результат тестирования", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+				container.NewGridWithColumns(2, container.NewCenter(resultLabel), container.NewCenter(maskot)),
+				container.NewCenter(restartBtn),
+			),
+		)
+
+		gameScreenWrapper.Objects = []fyne.CanvasObject{resultsLayout}
+		gameScreenWrapper.Refresh()
+	}
+
 	yesButton := widget.NewButton("Yes", func(){
-		ui.HandleButtonNext(engine, question, numQuestion, back.AnswerYes)
+		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerYes) {
+			showResults()
+		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 	noButton := widget.NewButton("No", func(){
-		ui.HandleButtonNext(engine, question, numQuestion, back.AnswerNo)
+		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerNo) {
+			showResults()
+		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 	idkButton := widget.NewButton("IDK", func(){
-		ui.HandleButtonNext(engine, question, numQuestion, back.AnswerUnknown)
+		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerUnknown) {
+			showResults()
+		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 	prevButton := widget.NewButton("Previous", func() {
@@ -107,16 +161,18 @@ func main() {
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 
-
-	gameTabContent := container.NewVBox(
-			widget.NewSeparator(),
-			container.NewCenter(container.NewHBox(container.NewCenter(container.NewHBox(numQuestion, question)), maskot)),
-			widget.NewSeparator(),
-			container.NewCenter(container.NewHBox(yesButton, idkButton, noButton)),
-			container.NewCenter(container.NewHBox(prevButton)),
+	questionBox := container.NewCenter(container.NewHBox(numQuestion, question))
+	middleRow := container.NewGridWithColumns(2,
+		questionBox,
+		container.NewCenter(maskot),
 	)
-
-	var tabs* container.AppTabs
+	mainLayout := container.NewVBox(
+		middleRow,
+		container.NewCenter(container.NewHBox(yesButton, idkButton, noButton)),
+		container.NewCenter(container.NewHBox(prevButton)),
+	)
+	gameTabContent := container.NewCenter(mainLayout)
+	gameScreenWrapper.Add(gameTabContent)
 
 	startBtn := widget.NewButton("Start", func() {
 		util.Debug("TODO: start button")
@@ -124,32 +180,35 @@ func main() {
 			popUp.Show()
 			return
 		}
+		numQuestion.SetText("1")
 		engine.Start()
+		gameScreenWrapper.Objects = []fyne.CanvasObject{gameTabContent}
+		gameScreenWrapper.Refresh()
 		tabs.EnableIndex(2)
 		tabs.SelectIndex(2)
 		question.SetText((engine.Base.Properties[engine.Questions[engine.StatePoiner]].Description) + "?")})
 
 	mainTabContent := container.NewVBox(
 		welcomeLabel,
-		widget.NewSeparator(),
 		container.NewCenter(startBtn),
 	)
+	mainTabContentCentered := container.NewCenter(mainTabContent)
 
 	scroll := container.NewScroll(content)
 	scroll.SetMinSize(fyne.NewSize(600, 400))
 
 	dbTabContent := container.NewVBox(
 		widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		widget.NewSeparator(),
 		container.NewCenter(openBtn),
 		container.NewCenter(scroll),
 		// TODO: db viewer
 	)
+	dbTabContentCentered := container.NewCenter(dbTabContent)
 
 	tabs = container.NewAppTabs(
-		container.NewTabItem("Главная", mainTabContent),
-		container.NewTabItem("Загрузка базы знаний", dbTabContent),
-		container.NewTabItem("Игра", gameTabContent),
+		container.NewTabItem("Главная", mainTabContentCentered),
+		container.NewTabItem("Загрузка базы знаний", dbTabContentCentered),
+		container.NewTabItem("Игра", gameScreenWrapper),
 	)
 	tabs.DisableIndex(2)
 
