@@ -7,21 +7,29 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
+	"os"
 	"io"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 func main() {
 	a := app.NewWithID("com.ganga")
 	w := a.NewWindow("ganga")
 
-	mascotPaths, err := ui.LoadMaskotCache()
+	var argNum uint8 = 0
+	if len(os.Args) > 1 {
+		arg := os.Args[1]
+		if arg == "cat" {
+			argNum = 1
+		}
+	}
+	mascotPaths, err := ui.LoadMaskotCache(argNum)
 	if err != nil {
 		util.Error("initialisation error: %s", err.Error())
 		a.Quit()

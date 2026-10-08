@@ -16,6 +16,22 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+const (
+	MascotCatRefl = "maskot_cat_refl.png"
+	MascotCatHappy = "maskot_cat_happy.png"
+	MascotCatStab = "maskot_cat_stab.png"
+
+	MascotGopherRefl = "maskot_refl.png"
+	MascotGopherHappy = "maskot_happy.png"
+	MascotGopherStab = "maskot_stab.png"
+)
+
+type Preset struct {
+	name     string
+	fileName string
+	target   *fyne.Resource
+}
+
 func CreatePreview(k* back.KBase) string {
 	var sb strings.Builder
 	sb.Grow(512)
@@ -47,7 +63,7 @@ type MascotPaths struct {
 	Stable fyne.Resource
 }
 
-func LoadMaskotCache() (MascotPaths, error) {
+func LoadMaskotCache(preset uint8) (MascotPaths, error) {
 	var cache MascotPaths
 	exePath, err := os.Executable()
 	if err != nil {
@@ -57,15 +73,25 @@ func LoadMaskotCache() (MascotPaths, error) {
 	buildDir := filepath.Dir(exePath)
 	assetsDir := filepath.Join(buildDir, "..", "assets")
 
-	files := []struct {
-		name     string
-		fileName string
-		target   *fyne.Resource
-	}{
-		{"reflective", "maskot_refl.png", &cache.Reflective},
-		{"happy", "maskot_happy.png", &cache.Happy},
-		{"stable", "maskot_stab.png", &cache.Stable},
+	var pres []Preset
+
+	var PresetGopher = []Preset {
+		{"reflective", MascotGopherRefl, &cache.Reflective},
+			{"happy", MascotGopherHappy, &cache.Happy},
+			{"stable", MascotGopherStab, &cache.Stable},
+		}
+
+	var PresetCat = []Preset {
+		{"reflective", MascotCatRefl, &cache.Reflective},
+			{"happy", MascotCatHappy, &cache.Happy},
+			{"stable", MascotCatStab, &cache.Stable},
+		}
+
+	switch preset {
+	case 0: pres = PresetGopher
+	case 1: pres = PresetCat
 	}
+	files := pres
 
 	for _, file := range files {
 		fullPath := filepath.Join(assetsDir, file.fileName)
