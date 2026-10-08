@@ -151,14 +151,28 @@ func (e* Engine)GetResult() ([]string, error) {
 	}
 	currentPercents := e.States[e.StatePoiner].Percents
 
-	var maxPercent float64 = 50.0
+	count := len(e.Base.Objects)
+	if count == 0 {
+		return nil, errors.New("no objects in knowledge base")
+	}
+
+	startValue := 100.0 / float64(count)
+
 	var resultIdx []string
+	var max float64 = 0.0
+
+	for _, val := range currentPercents {
+		if val > max {
+			max = val
+		}
+	}
+
+	if max <= startValue {
+		return nil, nil
+	}
 
 	for objKey, percent := range currentPercents {
-		if percent > maxPercent {
-			maxPercent = percent
-			resultIdx = []string{objKey}
-		} else if percent == maxPercent && percent > 50.0 {
+		if percent == max {
 			resultIdx = append(resultIdx, objKey)
 		}
 	}
