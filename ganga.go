@@ -4,67 +4,27 @@ import (
 	"ganga/back"
 	"ganga/ui"
 	"ganga/util"
-	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 
 	"io"
 )
 
-func handleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Label, answer back.Answer) {
-	if e == nil {
-		util.Error("cant deal with nil pointers")
-		return
-	}
-	util.Debug("state pointer: %d", e.StatePoiner)
-	util.Debug("questions: %v", e.Questions)
-	if e.StatePoiner >= uint64(len(e.Questions)) {
-		util.Debug("All questions are already answered")
-		return
-	}
-
-	currentKey := e.Questions[e.StatePoiner]
-	currentProp := e.Base.Properties[currentKey]
-
-	e.RecalculatePercents(currentProp, answer)
-
-	if e.StatePoiner < uint64(len(e.Questions)) {
-		nextKey := e.Questions[e.StatePoiner]
-		nextProp := e.Base.Properties[nextKey]
-		quest.SetText(nextProp.Description + "?")
-		numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
-	} else {
-		quest.SetText("Тест завершен! Результаты рассчитаны.")
-		numQuest.SetText("-")
-	}
-	util.Debug("new state pointer: %d", e.StatePoiner)
-	util.Debug("recalculated percents: %v", e.States[e.StatePoiner].Percents)
-}
-
-func handleButtonPrev(e* back.Engine, quest *widget.Label, numQuest *widget.Label) {
-	if e == nil {
-		return
-	}
-	if e.StatePoiner == 0 {
-		util.Debug("Already at the first question")
-		return
-	}
-	e.StatePoiner -= 1
-	prevKey := e.Questions[e.StatePoiner]
-	prevProp := e.Base.Properties[prevKey]
-	quest.SetText(prevProp.Description + "?")
-	numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
-	util.Debug("prev pressed. state pointer: %d, percents: %v", e.StatePoiner, e.States[e.StatePoiner].Percents)
-}
-
-
 func main() {
 	a := app.NewWithID("com.ganga")
 	w := a.NewWindow("ganga")
+
+	mascotPaths, err := ui.LoadMaskotCache()
+	if err != nil {
+		util.Error("initialisation error: %s", err.Error())
+		a.Quit()
+		return
+	}
 
 	content := widget.NewLabel("")
 
@@ -124,26 +84,36 @@ func main() {
 	)
 	popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
 
+	maskot := canvas.NewImageFromResource(mascotPaths.Happy)
+	maskot.FillMode = canvas.ImageFillContain
+	maskot.SetMinSize(fyne.NewSize(150, 150))
+
 	numQuestion := widget.NewLabel("1")
 	question :=	widget.NewLabel("Question")
 	yesButton := widget.NewButton("Yes", func(){
-		handleButtonNext(engine, question, numQuestion, back.AnswerYes)
+		ui.HandleButtonNext(engine, question, numQuestion, back.AnswerYes)
+		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 	noButton := widget.NewButton("No", func(){
-		handleButtonNext(engine, question, numQuestion, back.AnswerNo)
+		ui.HandleButtonNext(engine, question, numQuestion, back.AnswerNo)
+		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 	idkButton := widget.NewButton("IDK", func(){
-		handleButtonNext(engine, question, numQuestion, back.AnswerUnknown)
+		ui.HandleButtonNext(engine, question, numQuestion, back.AnswerUnknown)
+		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 	prevButton := widget.NewButton("Previous", func() {
-		handleButtonPrev(engine, question, numQuestion)
+		ui.HandleButtonPrev(engine, question, numQuestion)
+		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
 
+
 	gameTabContent := container.NewVBox(
-		container.NewCenter(container.NewHBox(numQuestion, question)),
-		widget.NewSeparator(),
-		container.NewCenter(container.NewHBox(yesButton, idkButton, noButton)),
-		container.NewCenter(container.NewHBox(prevButton)),
+			widget.NewSeparator(),
+			container.NewCenter(container.NewHBox(container.NewCenter(container.NewHBox(numQuestion, question)), maskot)),
+			widget.NewSeparator(),
+			container.NewCenter(container.NewHBox(yesButton, idkButton, noButton)),
+			container.NewCenter(container.NewHBox(prevButton)),
 	)
 
 	var tabs* container.AppTabs
