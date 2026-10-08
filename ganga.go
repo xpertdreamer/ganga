@@ -222,7 +222,7 @@ func main() {
 		widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		container.NewCenter(openBtn),
 		container.NewCenter(scroll),
-		// TODO: db viewer
+		// TODO: db viewer, or base editor as sub-apllication
 	)
 	dbTabContentCentered := container.NewCenter(dbTabContent)
 
