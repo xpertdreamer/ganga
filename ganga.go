@@ -45,6 +45,22 @@ func handleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Labe
 	util.Debug("recalculated percents: %v", e.States[e.StatePoiner].Percents)
 }
 
+func handleButtonPrev(e* back.Engine, quest *widget.Label, numQuest *widget.Label) {
+	if e == nil {
+		return
+	}
+	if e.StatePoiner == 0 {
+		util.Debug("Already at the first question")
+		return
+	}
+	e.StatePoiner -= 1
+	prevKey := e.Questions[e.StatePoiner]
+	prevProp := e.Base.Properties[prevKey]
+	quest.SetText(prevProp.Description + "?")
+	numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
+	util.Debug("prev pressed. state pointer: %d, percents: %v", e.StatePoiner, e.States[e.StatePoiner].Percents)
+}
+
 
 func main() {
 	a := app.NewWithID("com.ganga")
@@ -119,7 +135,9 @@ func main() {
 	idkButton := widget.NewButton("IDK", func(){
 		handleButtonNext(engine, question, numQuestion, back.AnswerUnknown)
 	})
-	prevButton := widget.NewButton("Previous", func() {util.Debug("TODO: previous")})
+	prevButton := widget.NewButton("Previous", func() {
+		handleButtonPrev(engine, question, numQuestion)
+	})
 
 	gameTabContent := container.NewVBox(
 		container.NewCenter(container.NewHBox(numQuestion, question)),

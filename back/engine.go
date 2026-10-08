@@ -64,6 +64,9 @@ func GetRandomKeys(kb *KBase, count int) []string {
 
 
 func (e* Engine)RecalculatePercents(p Property, answer Answer) {
+	if e.StatePoiner < uint64(len(e.States)-1) {
+		e.States = e.States[:e.StatePoiner+1]
+	}
 	currentState := e.States[e.StatePoiner]
 	nextPercents := make(map[string]float64, len(currentState.Percents))
 	for k, v := range currentState.Percents {
