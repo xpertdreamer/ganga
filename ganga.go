@@ -78,15 +78,6 @@ func main() {
 		fd.Show()
 	})
 
-	var popUp *widget.PopUp
-	popUpContent := container.NewVBox(
-		widget.NewLabel("Upload base first"),
-		widget.NewButton("Close", func() {
-			popUp.Hide()
-		}),
-	)
-	popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
-
 	maskot := canvas.NewImageFromResource(mascotPaths.Happy)
 	maskot.FillMode = canvas.ImageFillContain
 	maskot.SetMinSize(fyne.NewSize(250, 250))
@@ -188,9 +179,8 @@ func main() {
 	gameTabContent := container.NewCenter(mainLayout)
 
 	startBtn := widget.NewButton("Start", func() {
-		util.Debug("TODO: start button")
 		if len(engine.Base.Properties) == 0 {
-			popUp.Show()
+			dialog.ShowInformation("Внимание!", "Сначала загрузите, или создайте базу знаний", w)
 			return
 		}
 		numQuestion.SetText("1")
