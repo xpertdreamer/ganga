@@ -2,8 +2,9 @@ package main
 
 import (
 	"ganga/back"
-	"ganga/util"
 	"ganga/ui"
+	"ganga/util"
+	"strconv"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -13,6 +14,21 @@ import (
 
 	"io"
 )
+
+func handleButtonNext(e* back.Engine, quest *widget.Label, numQuest *widget.Label) {
+	if e == nil {
+		util.Error("cant deal with nil pointers")
+		return
+	}
+	util.Debug("state pointer: %d", e.StatePoiner)
+	util.Debug("questions: %v", e.Questions)
+	util.Debug("props: %v", e.Base.Properties)
+	if e.StatePoiner < uint64(len(e.Questions) - 1) {
+		e.StatePoiner += 1
+		quest.SetText((e.Base.Properties[e.Questions[e.StatePoiner]].Description) + "?")
+		numQuest.SetText(strconv.FormatUint(e.StatePoiner + 1, 10))
+	}
+}
 
 func main() {
 	a := app.NewWithID("com.ganga")
@@ -66,28 +82,48 @@ func main() {
 	openBtn := widget.NewButton("File Manager", func() {
 		fd.Show()
 	})
-	// var popUp *widget.PopUp
-	// popUpContent := container.NewVBox(
-	// 	widget.NewLabel("TODO: start button"),
-	// 	widget.NewButton("Close", func() {
-	// 		popUp.Hide()
-	// 	}),
-	// )
-	// popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
 
+	var popUp *widget.PopUp
+	popUpContent := container.NewVBox(
+		widget.NewLabel("Upload base first"),
+		widget.NewButton("Close", func() {
+			popUp.Hide()
+		}),
+	)
+	popUp = widget.NewModalPopUp(popUpContent, w.Canvas())
+
+	numQuestion := widget.NewLabel("1")
 	question :=	widget.NewLabel("Question")
+	yesButton := widget.NewButton("Yes", func(){
+		handleButtonNext(engine, question, numQuestion)
+	})
+	noButton := widget.NewButton("No", func(){
+		handleButtonNext(engine, question, numQuestion)
+	})
+	idkButton := widget.NewButton("IDK", func(){
+		handleButtonNext(engine, question, numQuestion)
+	})
 	prevButton := widget.NewButton("Previous", func() {util.Debug("TODO: previous")})
-	nextButton := widget.NewButton("Next", func() {util.Debug("TODO: next")})
 
 	gameTabContent := container.NewVBox(
-		container.NewCenter(question),
+		container.NewCenter(container.NewHBox(numQuestion, question)),
 		widget.NewSeparator(),
-		container.NewCenter(container.NewHBox(prevButton, nextButton)),
+		container.NewCenter(container.NewHBox(yesButton, idkButton, noButton)),
+		container.NewCenter(container.NewHBox(prevButton)),
 	)
 
 	var tabs* container.AppTabs
 
-	startBtn := widget.NewButton("Start", func() { util.Debug("TODO: start button"); engine.Start(); tabs.EnableIndex(2); tabs.SelectIndex(2)})
+	startBtn := widget.NewButton("Start", func() {
+		util.Debug("TODO: start button")
+		if len(engine.Base.Properties) == 0 {
+			popUp.Show()
+			return
+		}
+		engine.Start()
+		tabs.EnableIndex(2)
+		tabs.SelectIndex(2)
+		question.SetText((engine.Base.Properties[engine.Questions[engine.StatePoiner]].Description) + "?")})
 
 	mainTabContent := container.NewVBox(
 		welcomeLabel,
