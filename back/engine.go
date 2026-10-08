@@ -7,6 +7,7 @@ import (
 type Engine struct {
 	base *KBase
 	run bool
+	Percents map[string]float64
 }
 
 func (e* Engine)Create(k* KBase) error {
@@ -20,6 +21,8 @@ func (e* Engine)Create(k* KBase) error {
 	e.run = false
 	return nil
 }
+
+// TODO: in func { traverse 'Percents' and check if Object in KBase with key [string] have property 'x' -> do smth with procentiles}
 
 func (e* Engine)Start() error {
 	if e == nil {
