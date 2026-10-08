@@ -14,6 +14,7 @@ import (
 
 	"io"
 	"strings"
+	"strconv"
 )
 
 func main() {
@@ -93,7 +94,37 @@ func main() {
 	numQuestion := widget.NewLabel("1")
 	question :=	widget.NewLabel("Question")
 
-	gameScreenWrapper := container.NewStack()
+	restartBtn := widget.NewButton("На главную", func() {
+		tabs.SelectIndex(0)
+		tabs.DisableIndex(2)
+		tabs.DisableIndex(3)
+	})
+	continueBtn := widget.NewButton("Продолжить", func() {
+		addedQuest := engine.GetMoreQuestions(len(engine.Questions) / 3)
+		if addedQuest > 0 {
+			tabs.SelectIndex(2)
+			tabs.DisableIndex(3)
+			nextKey := engine.Questions[engine.StatePoiner]
+			nextProp := engine.Base.Properties[nextKey]
+			question.SetText(nextProp.Description + "?")
+			numQuestion.SetText(strconv.FormatUint(engine.StatePoiner+1, 10))
+		} else {
+			dialog.ShowInformation("Внимание", "В базе знаний больше нет доступных вопросов для уточнения!", w)
+		}
+	})
+	resultLabel := widget.NewLabelWithStyle(
+		"",
+		fyne.TextAlignCenter,
+		fyne.TextStyle{Bold: true, Italic: true},
+	)
+	resultTabContent := container.NewCenter(
+		container.NewVBox(
+			widget.NewLabelWithStyle("Результат тестирования", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+			container.NewGridWithColumns(2, container.NewCenter(resultLabel), container.NewCenter(maskot)),
+			container.NewCenter(container.NewHBox(restartBtn, continueBtn)),
+		),
+	)
+
 	showResults := func() {
 		winners, err := engine.GetResult()
 		if err != nil {
@@ -112,30 +143,13 @@ func main() {
 				builder.WriteString(engine.Base.Objects[w].Description)
 			}
 			resultText = builder.String()
-			// resultText = "Я думаю, это: " + strings.Join(engine.Base.Objects[], ", ")
 		}
+		resultLabel.SetText(resultText)
 
-		resultLabel := widget.NewLabelWithStyle(
-			resultText,
-			fyne.TextAlignCenter,
-			fyne.TextStyle{Bold: true, Italic: true},
-		)
+		resultTabContent.Refresh()
 
-		restartBtn := widget.NewButton("На главную", func() {
-			tabs.SelectIndex(0)
-		})
-		// nextBtn := widget.NewButton("Продолжить", func)
-
-		resultsLayout := container.NewCenter(
-			container.NewVBox(
-				widget.NewLabelWithStyle("Результат тестирования", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-				container.NewGridWithColumns(2, container.NewCenter(resultLabel), container.NewCenter(maskot)),
-				container.NewCenter(restartBtn),
-			),
-		)
-
-		gameScreenWrapper.Objects = []fyne.CanvasObject{resultsLayout}
-		gameScreenWrapper.Refresh()
+		tabs.EnableIndex(3)
+		tabs.SelectIndex(3)
 	}
 
 	yesButton := widget.NewButton("Yes", func(){
@@ -172,7 +186,6 @@ func main() {
 		container.NewCenter(container.NewHBox(prevButton)),
 	)
 	gameTabContent := container.NewCenter(mainLayout)
-	gameScreenWrapper.Add(gameTabContent)
 
 	startBtn := widget.NewButton("Start", func() {
 		util.Debug("TODO: start button")
@@ -182,8 +195,6 @@ func main() {
 		}
 		numQuestion.SetText("1")
 		engine.Start()
-		gameScreenWrapper.Objects = []fyne.CanvasObject{gameTabContent}
-		gameScreenWrapper.Refresh()
 		tabs.EnableIndex(2)
 		tabs.SelectIndex(2)
 		question.SetText((engine.Base.Properties[engine.Questions[engine.StatePoiner]].Description) + "?")})
@@ -208,9 +219,12 @@ func main() {
 	tabs = container.NewAppTabs(
 		container.NewTabItem("Главная", mainTabContentCentered),
 		container.NewTabItem("Загрузка базы знаний", dbTabContentCentered),
-		container.NewTabItem("Игра", gameScreenWrapper),
+		container.NewTabItem("Игра", gameTabContent),
+		container.NewTabItem("Результаты", resultTabContent),
 	)
+
 	tabs.DisableIndex(2)
+	tabs.DisableIndex(3)
 
 	w.SetContent(tabs)
 	w.Resize(fyne.NewSize(800, 600))

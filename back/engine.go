@@ -165,3 +165,43 @@ func (e* Engine)GetResult() ([]string, error) {
 
 	return resultIdx, nil
 }
+
+func (e* Engine)GetMoreQuestions(count int) int {
+	if len(e.Base.Properties) == 0 || count <= 0 {
+		return 0
+	}
+
+	existing := make(map[string]bool)
+	for _, q := range e.Questions {
+		existing[q] = true
+	}
+
+	var availableKeys []string
+	for key := range e.Base.Properties {
+		if !existing[key] {
+			availableKeys = append(availableKeys, key)
+		}
+	}
+
+	if len(availableKeys) == 0 {
+		return 0
+	}
+
+	if count > len(availableKeys) {
+		count = len(availableKeys)
+	}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	addedCount := 0
+
+	for i := 0; i < count; i++ {
+		randIdx := r.Intn(len(availableKeys))
+		e.Questions = append(e.Questions, availableKeys[randIdx])
+
+		availableKeys[randIdx] = availableKeys[len(availableKeys)-1]
+		availableKeys = availableKeys[:len(availableKeys)-1]
+		addedCount++
+	}
+
+	return addedCount
+}
