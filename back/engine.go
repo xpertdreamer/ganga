@@ -27,13 +27,16 @@ type Engine struct {
 	StatePoiner uint64
 }
 
+func (e* Engine)Delete() {
+	e.Base.Clear()
+	e.Base = nil
+}
+
 func (e* Engine)Create(k* KBase) error {
-	if e.Base != nil {
-		return errors.New("you already initialized engine")
-	}
 	if k == nil {
 		return errors.New("cant create engine from nil pointer")
 	}
+	e.Delete()
 	e.Base = k
 	return nil
 }

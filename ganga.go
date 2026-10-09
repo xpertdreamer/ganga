@@ -41,11 +41,6 @@ func main() {
 
 	kb := &back.KBase{}
 	engine := &back.Engine{}
-	if err := engine.Create(kb); err != nil {
-		util.Error("%s", err.Error())
-		a.Quit()
-		return
-	}
 
 	exitBtn := widget.NewButton("Выход", func() {
 		dialog.ShowConfirm("Подтверждение выхода", "Вы уверены, что хотите выйти?", func(confirmed bool) {
@@ -84,6 +79,11 @@ func main() {
 			return
 		}
 		content.SetText(ui.CreatePreview(kb))
+		if err := engine.Create(kb); err != nil {
+			util.Error("%s", err.Error())
+			a.Quit()
+			return
+		}
 	}, w)
 
 	welcomeLabel := widget.NewLabelWithStyle(

@@ -35,6 +35,13 @@ func (k* KBase)HasProperty(objId string, propId string) (bool, error) {
 	}
 }
 
+func(k* KBase)Clear() {
+	if k != nil {
+		clear(k.Objects)
+		clear(k.Properties)
+	}
+}
+
 func (k* KBase)Parse(data []byte) error {
 	var raw RAW
 	if err := json.Unmarshal(data, &raw); err != nil {
