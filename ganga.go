@@ -10,10 +10,12 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 
-	"os"
+	"errors"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -41,6 +43,50 @@ func main() {
 
 	kb := &back.KBase{}
 	engine := &back.Engine{}
+
+	innerWns := container.NewMultipleWindows()
+	queryEntry := widget.NewEntry()
+	queryEntry.SetPlaceHolder("Запрос...")
+
+	var queryWin *container.InnerWindow
+
+	querySubmitBtn := widget.NewButton("Отправить", func(){
+		tabs.DisableIndex(2)
+		tabs.DisableIndex(3)
+
+		raw := queryEntry.Text
+		if strings.TrimSpace(raw) == "" {
+			dialog.ShowError(errors.New("Запрос не может быть пустым"), w)
+			return
+		}
+
+		// TODO: logic
+		util.Debug("submitted: %s", raw)
+
+		if err := engine.Create(kb); err != nil {
+			dialog.ShowError(err, w)
+			return
+		}
+		content.RemoveAll()
+		content.Add(ui.CreatePreview(kb))
+		content.Refresh()
+	})
+
+	queryWin = container.NewInnerWindow(
+		"Изменение базы знаний",
+		container.NewBorder(
+			widget.NewLabel("Введите содержимое в формате базы знаний:"),
+			container.NewHBox(layout.NewSpacer(), querySubmitBtn),
+			nil, nil,
+			queryEntry,
+		),
+	)
+	innerWns.Add(queryWin)
+	queryWin.Hide()
+
+	queryButton := widget.NewButton("Редактировать", func() {
+		queryWin.Show()
+	})
 
 	exitBtn := widget.NewButton("Выход", func() {
 		dialog.ShowConfirm("Подтверждение выхода", "Вы уверены, что хотите выйти?", func(confirmed bool) {
@@ -225,10 +271,10 @@ func main() {
 	dbTabContent := container.NewBorder(
 		container.NewVBox(
 			widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-			container.NewCenter(openBtn),
+			container.NewCenter(container.NewHBox(openBtn, queryButton)),
 		),
 		nil, nil, nil,
-		content,
+		container.NewStack(content, innerWns),
 	)
 
 	tabs = container.NewAppTabs(
