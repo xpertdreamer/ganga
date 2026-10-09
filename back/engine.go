@@ -32,11 +32,13 @@ func (e* Engine)Delete() {
 	e.Base = nil
 }
 
-func (e* Engine)Create(k* KBase) error {
+func (e *Engine) Create(k *KBase) error {
 	if k == nil {
 		return errors.New("cant create engine from nil pointer")
 	}
-	e.Delete()
+	if e.Base != nil && e.Base != k {
+		e.Base.Clear()
+	}
 	e.Base = k
 	return nil
 }

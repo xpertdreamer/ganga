@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"time"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -33,9 +34,9 @@ type Preset struct {
 	target   *fyne.Resource
 }
 
-func newTable(n int, row func(i int) (string, string)) *widget.Table {
+func newTable(n int, headers []string, row func(i int) []string) *widget.Table {
 	t := widget.NewTable(
-		func() (int, int) { return n + 1, 2 },
+		func() (int, int) { return n + 1, len(headers) },
 		func() fyne.CanvasObject {
 			l := widget.NewLabel("")
 			l.Wrapping = fyne.TextWrapWord
@@ -45,26 +46,30 @@ func newTable(n int, row func(i int) (string, string)) *widget.Table {
 			l := o.(*widget.Label)
 			if id.Row == 0 {
 				l.TextStyle = fyne.TextStyle{Bold: true}
-				if id.Col == 0 {
-					l.SetText("Ключ")
-				} else {
-					l.SetText("Описание")
-				}
+				l.SetText(headers[id.Col])
 				return
 			}
 			l.TextStyle = fyne.TextStyle{}
-			key, desc := row(id.Row - 1)
-			if id.Col == 0 {
-				l.SetText(key)
-			} else {
-				l.SetText(desc)
-			}
+			l.SetText(row(id.Row - 1)[id.Col])
 		},
 	)
 
 	t.SetColumnWidth(0, 200)
 	t.SetColumnWidth(1, 400)
+	if len(headers) > 2 {
+		t.SetColumnWidth(2, 400)
+	}
+	t.Resize(fyne.NewSize(900, 500))
 	return t
+}
+
+func propKeysOfObject(o back.Object) string {
+	keys := make([]string, 0)
+	for k := range o.Properties {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return strings.Join(keys, ", ")
 }
 
 func CreatePreview(k* back.KBase) fyne.CanvasObject {
@@ -82,23 +87,27 @@ func CreatePreview(k* back.KBase) fyne.CanvasObject {
 
 	propTable := newTable(
 		len(propKeys),
-		func(i int) (string, string) {
+		[]string {"Ключ", "Описание"},
+		func(i int) []string {
 			j := propKeys[i]
-			return j, k.Properties[j].Description
+			return []string{j, k.Properties[j].Description}
 		},
 	)
 	objTable := newTable(
 		len(objKeys),
-		func(i int) (string, string) {
+		[]string {"Ключ", "Описание", "Свойства"},
+		func(i int) []string {
 			j := objKeys[i]
-			return j, k.Objects[j].Description
+			return []string {j, k.Objects[j].Description, propKeysOfObject(k.Objects[j])}
 		},
 	)
 
-	return container.NewAppTabs(
+	nav := container.NewAppTabs(
 		container.NewTabItem("Свойства ("+strconv.Itoa(len(propKeys))+" )", propTable),
 		container.NewTabItem("Объекты ("+strconv.Itoa(len(objKeys))+" )", objTable),
 	)
+
+	return nav
 }
 
 type MascotPaths struct {

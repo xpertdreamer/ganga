@@ -84,8 +84,11 @@ func main() {
 			a.Quit()
 			return
 		}
-		content.Objects = []fyne.CanvasObject{ui.CreatePreview(kb)}
+
+		content.RemoveAll()
+		content.Add(ui.CreatePreview(kb))
 		content.Refresh()
+
 	}, w)
 
 	welcomeLabel := widget.NewLabelWithStyle(
@@ -219,16 +222,18 @@ func main() {
 	mainTabContentCentered := container.NewCenter(mainTabContent)
 
 
-	dbTabContent := container.NewVBox(
-		widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-		container.NewCenter(openBtn),
-		container.NewCenter(content),
+	dbTabContent := container.NewBorder(
+		container.NewVBox(
+			widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
+			container.NewCenter(openBtn),
+		),
+		nil, nil, nil,
+		content,
 	)
-	dbTabContentCentered := container.NewCenter(dbTabContent)
 
 	tabs = container.NewAppTabs(
 		container.NewTabItem("Главная", mainTabContentCentered),
-		container.NewTabItem("Загрузка базы знаний", dbTabContentCentered),
+		container.NewTabItem("Загрузка базы знаний", dbTabContent),
 		container.NewTabItem("Игра", gameTabContent),
 		container.NewTabItem("Результаты", resultTabContent),
 	)
