@@ -36,7 +36,7 @@ func main() {
 		return
 	}
 
-	content := widget.NewLabel("")
+	content := container.NewStack()
 	var tabs* container.AppTabs
 
 	kb := &back.KBase{}
@@ -78,12 +78,14 @@ func main() {
 			a.Quit()
 			return
 		}
-		content.SetText(ui.CreatePreview(kb))
+
 		if err := engine.Create(kb); err != nil {
 			util.Error("%s", err.Error())
 			a.Quit()
 			return
 		}
+		content.Objects = []fyne.CanvasObject{ui.CreatePreview(kb)}
+		content.Refresh()
 	}, w)
 
 	welcomeLabel := widget.NewLabelWithStyle(
@@ -216,14 +218,11 @@ func main() {
 	)
 	mainTabContentCentered := container.NewCenter(mainTabContent)
 
-	scroll := container.NewScroll(content)
-	scroll.SetMinSize(fyne.NewSize(600, 400))
 
 	dbTabContent := container.NewVBox(
 		widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
 		container.NewCenter(openBtn),
-		container.NewCenter(scroll),
-		// TODO: db viewer, or base editor as sub-apllication
+		container.NewCenter(content),
 	)
 	dbTabContentCentered := container.NewCenter(dbTabContent)
 

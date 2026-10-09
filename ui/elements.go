@@ -7,12 +7,13 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -32,29 +33,72 @@ type Preset struct {
 	target   *fyne.Resource
 }
 
-func CreatePreview(k* back.KBase) string {
-	var sb strings.Builder
-	sb.Grow(512)
+func newTable(n int, row func(i int) (string, string)) *widget.Table {
+	t := widget.NewTable(
+		func() (int, int) { return n + 1, 2 },
+		func() fyne.CanvasObject {
+			l := widget.NewLabel("")
+			l.Wrapping = fyne.TextWrapWord
+			return l
+		},
+		func(id widget.TableCellID, o fyne.CanvasObject) {
+			l := o.(*widget.Label)
+			if id.Row == 0 {
+				l.TextStyle = fyne.TextStyle{Bold: true}
+				if id.Col == 0 {
+					l.SetText("Ключ")
+				} else {
+					l.SetText("Описание")
+				}
+				return
+			}
+			l.TextStyle = fyne.TextStyle{}
+			key, desc := row(id.Row - 1)
+			if id.Col == 0 {
+				l.SetText(key)
+			} else {
+				l.SetText(desc)
+			}
+		},
+	)
 
-	sb.WriteString("Objects : \n\n")
-	for _, obj := range k.Objects {
-		sb.WriteString("\t")
-		sb.WriteString(obj.Description)
-		sb.WriteString(" ")
-		fmt.Fprintf(&sb, "%v", obj.Properties)
-		sb.WriteString(",\n\n")
+	t.SetColumnWidth(0, 200)
+	t.SetColumnWidth(1, 400)
+	return t
+}
+
+func CreatePreview(k* back.KBase) fyne.CanvasObject {
+	propKeys := make([]string, 0, len(k.Properties))
+	for i := range k.Properties {
+		propKeys = append(propKeys, i)
 	}
+	sort.Strings(propKeys)
 
-	sb.WriteString("Properties : \n\n")
-	for _, prop := range k.Properties {
-		sb.WriteString("\t")
-		sb.WriteString(prop.ID)
-		sb.WriteString(":")
-		sb.WriteString(prop.Description)
-		sb.WriteString(",\n")
+	objKeys := make([]string, 0, len(k.Objects))
+	for i := range k.Objects {
+		objKeys = append(objKeys, i)
 	}
+	sort.Strings(objKeys)
 
-	return sb.String()
+	propTable := newTable(
+		len(propKeys),
+		func(i int) (string, string) {
+			j := propKeys[i]
+			return j, k.Properties[j].Description
+		},
+	)
+	objTable := newTable(
+		len(objKeys),
+		func(i int) (string, string) {
+			j := objKeys[i]
+			return j, k.Objects[j].Description
+		},
+	)
+
+	return container.NewAppTabs(
+		container.NewTabItem("Свойства ("+strconv.Itoa(len(propKeys))+" )", propTable),
+		container.NewTabItem("Объекты ("+strconv.Itoa(len(objKeys))+" )", objTable),
+	)
 }
 
 type MascotPaths struct {
