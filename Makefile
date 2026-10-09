@@ -1,13 +1,16 @@
+.PHONY: all gena ganga clean
+
 DEBUG ?= 0
 
-all:
+all: ganga gena
+
 ganga:
 	@mkdir -p build
 	go build -ldflags "-X ganga/util.DebugMode=$(DEBUG)" -mod=vendor -o build .
 
 gena:
 	@mkdir -p build
-	go build -mod=vendor -ldflags "-X ganga/util.DebugMode=$(DEBUG)" -o build ./gena
+	cd gena && go build -ldflags "-X ganga/util.DebugMode=$(DEBUG)" -mod=vendor -o ../build .
 
 clean:
 	rm -rf build
