@@ -1,5 +1,7 @@
 package back
 
+import "regexp"
+
 type op uint8
 
 const (
@@ -8,10 +10,23 @@ const (
 	opDel // delete
 )
 
-type query struct {
+var	isInsert =
+regexp.MustCompile(`^\s*(\$\w+\s+=\s+"[а-яА-ЯёЁ\w]+(?:\s+[а-яА-ЯёЁ\w]+)*")|(\%\w+\s+=\s+\[\d+(,\d+)*\]\s+\:\s+"[а-яА-ЯёЁ\w]+(?:\s+[а-яА-ЯёЁ\w]+)*")\s*$`)
+
+var isChange =
+regexp.MustCompile(`^(\%\w+\s+\+\s+\$\w+)$`)
+
+var isDelete =
+regexp.MustCompile(`^(\%\w+\s+\-\s+\$\w+)$`)
+
+type Query struct {
 	target string
 	operator op
 	sequence string
+}
+
+func ValidateQuery(in string) bool {
+	return isInsert.MatchString(in) || isChange.MatchString(in) || isDelete.MatchString(in)
 }
 
 func opFromStr(in string) op {
@@ -21,3 +36,7 @@ func opFromStr(in string) op {
 	}
 	return opAdd
 }
+
+// func ParseQuery(in string) Query {
+//
+// }

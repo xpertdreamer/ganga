@@ -62,6 +62,7 @@ func main() {
 
 		// TODO: logic
 		util.Debug("submitted: %s", raw)
+		util.Debug("valid: %t", back.ValidateQuery(raw))
 
 		if err := engine.Create(kb); err != nil {
 			dialog.ShowError(err, w)
