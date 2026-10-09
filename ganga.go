@@ -56,6 +56,7 @@ func main() {
 	})
 
 	fd := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+		tabs.DisableIndex(2)
 		if err != nil {
 			util.Error("%s", err)
 			a.Quit()
