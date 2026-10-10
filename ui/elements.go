@@ -51,13 +51,22 @@ func newTable(n int, headers []string, row func(i int) []string) *widget.Table {
 			}
 			l.TextStyle = fyne.TextStyle{}
 			l.SetText(row(id.Row - 1)[id.Col])
+
 		},
 	)
+
+	for i := 0; i < n + 1; i++ {
+		if i == 0 {
+			t.SetRowHeight(i, 40)
+		} else {
+			t.SetRowHeight(i, 80)
+		}
+	}
 
 	t.SetColumnWidth(0, 200)
 	t.SetColumnWidth(1, 400)
 	if len(headers) > 2 {
-		t.SetColumnWidth(2, 400)
+		t.SetColumnWidth(2, 600)
 	}
 	t.Resize(fyne.NewSize(900, 500))
 	return t
