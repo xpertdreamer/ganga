@@ -131,6 +131,7 @@ func (e* Engine)Start() error {
 	case initialNumQuest <= 50 && initialNumQuest > 5:	initialNumQuest = int(float64(initialNumQuest) * 0.5)
 	}
 	e.Questions = GetRandomKeys(e.Base, initialNumQuest)
+	e.States = nil
 	e.StatePoiner = 0
 	util.Debug("initial questions: %d", initialNumQuest)
 	count := len(e.Base.Objects)

@@ -51,6 +51,12 @@ func main() {
 	var queryWin *container.InnerWindow
 
 	querySubmitBtn := widget.NewButton("Отправить", func(){
+		if engine.Base == nil || engine.Base.Properties == nil || engine.Base.Objects == nil {
+			util.Error("create base first")
+			dialog.ShowError(errors.New("create base first"), w)
+			return
+		}
+
 		tabs.DisableIndex(2)
 		tabs.DisableIndex(3)
 
@@ -62,14 +68,14 @@ func main() {
 
 		util.Debug("submitted: %s", raw)
 		util.Debug("valid: %t", back.ValidateQuery(raw))
-		util.Debug("query: %v", back.ParseQuery(raw))
-
-		if err := engine.Create(kb); err != nil {
+		var query back.QueryRaw = back.ParseQuery(raw)
+		if err := back.Submit(engine, query); err != nil {
+			util.Error("%s", err.Error())
 			dialog.ShowError(err, w)
 			return
 		}
 		content.RemoveAll()
-		content.Add(ui.CreatePreview(kb))
+		content.Add(ui.CreatePreview(engine.Base))
 		content.Refresh()
 	})
 
@@ -85,8 +91,23 @@ func main() {
 	innerWns.Add(queryWin)
 	queryWin.Hide()
 
-	queryButton := widget.NewButton("Редактировать", func() {
+	queryBtn := widget.NewButton("Редактировать", func() {
 		queryWin.Show()
+	})
+
+	createBtn := widget.NewButton("Создать", func() {
+		kb = back.NewKBase()
+		if err := engine.Create(kb); err != nil {
+			dialog.ShowError(err, w)
+			return
+		}
+
+		tabs.DisableIndex(2)
+		tabs.DisableIndex(3)
+
+		content.RemoveAll()
+		content.Add(ui.CreatePreview(engine.Base))
+		content.Refresh()
 	})
 
 	exitBtn := widget.NewButton("Выход", func() {
@@ -251,7 +272,7 @@ func main() {
 	gameTabContent := container.NewCenter(mainLayout)
 
 	startBtn := widget.NewButton("Начать", func() {
-		if len(engine.Base.Properties) == 0 {
+		if len(engine.Base.Properties) == 0 || len(engine.Base.Objects) == 0 {
 			dialog.ShowInformation("Внимание!", "Сначала загрузите, или создайте базу знаний", w)
 			return
 		}
@@ -272,7 +293,7 @@ func main() {
 	dbTabContent := container.NewBorder(
 		container.NewVBox(
 			widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-			container.NewCenter(container.NewHBox(openBtn, queryButton)),
+			container.NewCenter(container.NewHBox(openBtn, queryBtn, createBtn)),
 		),
 		nil, nil, nil,
 		container.NewStack(content, innerWns),

@@ -1,6 +1,7 @@
 package back
 
 import (
+	"fmt"
 	"ganga/util"
 	"regexp"
 	"strings"
@@ -12,7 +13,7 @@ const (
 	opAdd = iota
 	opChg // change
 	opDel // delete
-	opDsf
+	opDsf // delete self
 )
 
 var	isPropInsert =
@@ -29,6 +30,9 @@ regexp.MustCompile(`^(\%\w+\s+\-\s+\$\w+)$`)
 
 var isDeleteSelf =
 regexp.MustCompile(`^([\$\%]\w+\-\s*)$`)
+
+var digit =
+regexp.MustCompile(`\d+`)
 
 type QueryRaw struct {
 	target string
@@ -94,4 +98,149 @@ func ParseQuery(in string) QueryRaw {
 	}
 
 	return QueryRaw{}
+}
+
+func Submit(e *Engine, q QueryRaw) error {
+	if e == nil {
+		return fmt.Errorf("cant deal with engine nil pointer")
+	}
+	switch q.operator {
+	case opAdd:
+		return submitAdd(e, q)
+	case opChg:
+		return submitChg(e, q)
+	case opDel:
+		return submitDel(e, q)
+	case opDsf:
+		return submitDsf(e, q)
+	}
+	return fmt.Errorf("unknown operator")
+}
+
+func hasAllKeys[V any](m map[string]V, keys []string) bool {
+	for _, key := range keys {
+		if _, exists := m[key]; !exists {
+			return false
+		}
+	}
+	return true
+}
+
+func submitAdd(e *Engine, q QueryRaw) error {
+	switch {
+	case strings.HasPrefix(q.target, "$"):
+		target := strings.TrimPrefix(q.target, "$")
+		second := strings.TrimPrefix(q.sequence, "\"")
+		second = strings.TrimSuffix(second, "\"")
+		newProp := Property {
+			ID: target,
+			Type: "bool",
+			Description: second,
+		}
+		e.Base.Properties[target] = newProp
+		return nil
+
+	case strings.HasPrefix(q.target, "%"):
+		target := strings.TrimPrefix(q.target, "%")
+		parts := strings.Split(q.sequence, " : ")
+		if len(parts) != 2 {
+			return fmt.Errorf("bad sequence %s", q.sequence)
+		}
+		left := parts[0]
+		right := parts[1]
+		digits := digit.FindAllString(left, -1)
+
+		if !hasAllKeys(e.Base.Properties, digits) {
+			return fmt.Errorf("bad sequence %s", q.sequence)
+		}
+
+		right = strings.TrimPrefix(right, "\"")
+		right = strings.TrimSuffix(right, "\"")
+
+		props := make(map[string]Property)
+		for _, d := range digits {
+			if prop, exists := e.Base.Properties[d]; exists {
+				props[d] = prop
+			}
+		}
+
+		newObj := Object {
+			Tag: target,
+			Properties: props,
+			Description: right,
+		}
+
+		e.Base.Objects[target] = newObj
+
+		return nil
+	}
+	return fmt.Errorf("invalid query %v", q)
+}
+
+func submitChg(e *Engine, q QueryRaw) error {
+	target := strings.TrimPrefix(q.target, "%")
+	second := strings.TrimPrefix(q.sequence, "$")
+	obj, ok := e.Base.Objects[target]
+	if !ok {
+		return fmt.Errorf("object %q not found", q.target)
+	}
+	var prop *Property
+	for _, p := range e.Base.Properties {
+		if p.ID == second {
+			prop = &p
+			break
+		}
+	}
+	if prop == nil {
+		return fmt.Errorf("property %q not found", q.sequence)
+	}
+	obj.Properties[second] = *prop
+	return nil
+}
+
+func submitDel(e *Engine, q QueryRaw) error {
+	target := strings.TrimPrefix(q.target, "%")
+	second := strings.TrimPrefix(q.sequence, "$")
+	obj, ok := e.Base.Objects[target]
+	if !ok {
+		return fmt.Errorf("object %q not found", q.target)
+	}
+
+	if _, ok := obj.Properties[second]; !ok {
+		return fmt.Errorf("property %q not present in %q", q.sequence, q.target)
+	}
+	delete(obj.Properties, second)
+	return nil
+}
+
+func submitDsf(e *Engine, q QueryRaw) error {
+	switch {
+	case strings.HasPrefix(q.target, "%"):
+		name := strings.TrimPrefix(q.target, "%")
+		if _, ok := e.Base.Objects[name]; !ok {
+			return fmt.Errorf("object %q not found", q.target)
+		}
+		delete(e.Base.Objects, name)
+		return nil
+
+	case strings.HasPrefix(q.target, "$"):
+		name := strings.TrimPrefix(q.target, "$")
+		var removed bool = false
+		for _, obj := range e.Base.Objects {
+			if obj.Properties == nil {
+				continue
+			}
+			if _, ok := obj.Properties[name]; ok {
+				delete(obj.Properties, name)
+				removed = true
+			}
+		}
+		if !removed {
+			return fmt.Errorf("property %q not found", name)
+		}
+		delete(e.Base.Properties, name)
+		return nil
+	}
+
+	return fmt.Errorf("invalid target %q", q.target)
 }

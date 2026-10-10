@@ -74,3 +74,10 @@ func (k* KBase)Parse(data []byte) error {
 	}
 	return nil
 }
+
+func NewKBase() *KBase {
+	return &KBase{
+		Properties: make(map[string]Property),
+		Objects:    make(map[string]Object),
+	}
+}
