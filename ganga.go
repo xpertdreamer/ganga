@@ -11,6 +11,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
 	"errors"
@@ -81,7 +82,7 @@ func main() {
 		content.Refresh()
 	}
 
-	querySubmitBtn := widget.NewButton("Отправить", querySubmitFn)
+	querySubmitBtn := widget.NewButtonWithIcon("Отправить", theme.MailSendIcon(), querySubmitFn)
 
 	queryEntry.OnSubmitted = func(_ string) {
 		querySubmitFn()
@@ -99,11 +100,11 @@ func main() {
 	innerWns.Add(queryWin)
 	queryWin.Hide()
 
-	queryBtn := widget.NewButton("Редактировать", func() {
+	queryBtn := widget.NewButtonWithIcon("Редактировать", theme.DocumentCreateIcon(), func() {
 		queryWin.Show()
 	})
 
-	createBtn := widget.NewButton("Создать", func() {
+	createBtn := widget.NewButtonWithIcon("Создать", theme.ContentAddIcon(),func() {
 		kb = back.NewKBase()
 		if err := engine.Create(kb); err != nil {
 			dialog.ShowError(err, w)
@@ -118,7 +119,7 @@ func main() {
 		content.Refresh()
 	})
 
-	exitBtn := widget.NewButton("Выход", func() {
+	exitBtn := widget.NewButtonWithIcon("Выход", theme.WindowCloseIcon(), func() {
 		dialog.ShowConfirm("Подтверждение выхода", "Вы уверены, что хотите выйти?", func(confirmed bool) {
 			if confirmed {
 				a.Quit()
@@ -193,7 +194,7 @@ func main() {
 		dialog.ShowInformation("Сохранение", "База знаний сохранена", w)
 	}, w)
 
-	saveBtn := widget.NewButton("Сохранить", func() {
+	saveBtn := widget.NewButtonWithIcon("Сохранить", theme.DocumentSaveIcon(), func() {
 		saveDialog.Show()
 	})
 
@@ -202,7 +203,7 @@ func main() {
 		fyne.TextAlignCenter,
 		fyne.TextStyle{Bold: true},
 	)
-	openBtn := widget.NewButton("Загрузить из...", func() {
+	openBtn := widget.NewButtonWithIcon("Загрузить из...", theme.UploadIcon(), func() {
 		fd.Show()
 	})
 
@@ -213,12 +214,12 @@ func main() {
 	numQuestion := widget.NewLabel("1")
 	question :=	widget.NewLabel("Question")
 
-	restartBtn := widget.NewButton("На главную", func() {
+	restartBtn := widget.NewButtonWithIcon("На главную", theme.HomeIcon(), func() {
 		tabs.SelectIndex(0)
 		tabs.DisableIndex(2)
 		tabs.DisableIndex(3)
 	})
-	continueBtn := widget.NewButton("Продолжить", func() {
+	continueBtn := widget.NewButtonWithIcon("Продолжить", theme.NavigateNextIcon(), func() {
 		addedQuest := engine.GetMoreQuestions(len(engine.Questions) / 3)
 		if addedQuest > 0 {
 			tabs.SelectIndex(2)
@@ -274,25 +275,25 @@ func main() {
 		tabs.SelectIndex(3)
 	}
 
-	yesButton := widget.NewButton("Да", func(){
+	yesButton := widget.NewButtonWithIcon("Да", theme.ConfirmIcon(), func(){
 		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerYes) {
 			showResults()
 		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
-	noButton := widget.NewButton("Нет", func(){
+	noButton := widget.NewButtonWithIcon("Нет", theme.CancelIcon(), func(){
 		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerNo) {
 			showResults()
 		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
-	idkButton := widget.NewButton("Не знаю", func(){
+	idkButton := widget.NewButtonWithIcon("Не знаю", theme.MoreHorizontalIcon(), func(){
 		if ui.HandleButtonNext(engine, question, numQuestion, back.AnswerUnknown) {
 			showResults()
 		}
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
-	prevButton := widget.NewButton("Назад", func() {
+	prevButton := widget.NewButtonWithIcon("Назад", theme.NavigateBackIcon(), func() {
 		ui.HandleButtonPrev(engine, question, numQuestion)
 		ui.ChooseMaskotRand(maskot, mascotPaths)
 	})
@@ -309,7 +310,7 @@ func main() {
 	)
 	gameTabContent := container.NewCenter(mainLayout)
 
-	startBtn := widget.NewButton("Начать", func() {
+	startBtn := widget.NewButtonWithIcon("Начать", theme.MediaPlayIcon(), func() {
 		if len(engine.Base.Properties) == 0 || len(engine.Base.Objects) == 0 {
 			dialog.ShowInformation("Внимание!", "Сначала загрузите, или создайте базу знаний", w)
 			return
