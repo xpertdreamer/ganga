@@ -50,7 +50,7 @@ func main() {
 
 	var queryWin *container.InnerWindow
 
-	querySubmitBtn := widget.NewButton("Отправить", func(){
+querySubmitFn := func() {
 		if engine.Base == nil || engine.Base.Properties == nil || engine.Base.Objects == nil {
 			util.Error("create base first")
 			dialog.ShowError(errors.New("create base first"), w)
@@ -74,10 +74,18 @@ func main() {
 			dialog.ShowError(err, w)
 			return
 		}
+
+		queryEntry.SetText("")
 		content.RemoveAll()
 		content.Add(ui.CreatePreview(engine.Base))
 		content.Refresh()
-	})
+	}
+
+	querySubmitBtn := widget.NewButton("Отправить", querySubmitFn)
+
+	queryEntry.OnSubmitted = func(_ string) {
+		querySubmitFn()
+	}
 
 	queryWin = container.NewInnerWindow(
 		"Изменение базы знаний",
@@ -156,7 +164,6 @@ func main() {
 		content.RemoveAll()
 		content.Add(ui.CreatePreview(kb))
 		content.Refresh()
-
 	}, w)
 
 	welcomeLabel := widget.NewLabelWithStyle(
