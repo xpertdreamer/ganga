@@ -166,6 +166,37 @@ func main() {
 		content.Refresh()
 	}, w)
 
+	saveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+		if err != nil {
+			util.Error("save dialog: %s", err.Error())
+			dialog.ShowError(err, w)
+			return
+		}
+		if writer == nil {
+			return
+		}
+		defer writer.Close()
+
+		if engine.Base == nil {
+			dialog.ShowError(errors.New("сначала создайте или загрузите базу знаний"), w)
+			return
+		}
+
+		util.Debug("Saving to: %s", writer.URI().Path())
+
+		if err := engine.Base.Save(writer); err != nil {
+			util.Error("save error: %s", err.Error())
+			dialog.ShowError(err, w)
+			return
+		}
+
+		dialog.ShowInformation("Сохранение", "База знаний сохранена", w)
+	}, w)
+
+	saveBtn := widget.NewButton("Сохранить", func() {
+		saveDialog.Show()
+	})
+
 	welcomeLabel := widget.NewLabelWithStyle(
 		"Добро пожаловать в ganga!",
 		fyne.TextAlignCenter,
@@ -300,7 +331,7 @@ func main() {
 	dbTabContent := container.NewBorder(
 		container.NewVBox(
 			widget.NewLabelWithStyle("Управление файлами знаний", fyne.TextAlignCenter, fyne.TextStyle{Bold: true}),
-			container.NewCenter(container.NewHBox(openBtn, queryBtn, createBtn)),
+			container.NewCenter(container.NewHBox(openBtn, queryBtn, createBtn, saveBtn)),
 		),
 		nil, nil, nil,
 		container.NewStack(content, innerWns),

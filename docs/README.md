@@ -11,7 +11,6 @@ Go-Wanga
 ## TODO:
 
   - comments)
-  - db editor query
 
 ## Query Language Syntax
 
@@ -19,9 +18,9 @@ The syntax of this "query language" is pretty straightforward:
 
 - `$` - property
 - `%` - object
-- `=` - assign
+- `=` - add
 - `-` - delete
-- `+` - add
+- `+` - change
 
 Example:
 

@@ -6,20 +6,64 @@ import (
 
 	"encoding/json"
 	"fmt"
+	"sort"
+	"io"
 )
 
+type RawObject struct {
+	Properties  []json.Number `json:"properties"`
+	Description string        `json:"description"`
+	Tag         string        `json:"tag"`
+}
+
 type RAW struct {
-	Properties map[string]Property `json:"properties"`
-	Objects    map[string]struct {
-		Properties  []json.Number `json:"properties"`
-		Description string        `json:"description"`
-		Tag         string        `json:"tag"`
-	} `json:"objects"`
+	Properties map[string]Property  `json:"properties"`
+	Objects    map[string]RawObject `json:"objects"`
 }
 
 type KBase struct {
 	Properties map[string]Property
 	Objects map[string]Object
+}
+
+func (k *KBase) toRAW() RAW {
+	raw := RAW{
+		Properties: make(map[string]Property, len(k.Properties)),
+		Objects:    make(map[string]RawObject, len(k.Objects)),
+	}
+
+	for id, p := range k.Properties {
+		raw.Properties[id] = p
+	}
+
+	for id, obj := range k.Objects {
+		props := make([]json.Number, 0, len(obj.Properties))
+		for pid := range obj.Properties {
+			props = append(props, json.Number(pid))
+		}
+
+		sort.Slice(props, func(i, j int) bool {
+			return props[i] < props[j]
+		})
+
+		raw.Objects[id] = RawObject{
+			Tag:         obj.Tag,
+			Description: obj.Description,
+			Properties:  props,
+		}
+	}
+
+	return raw
+}
+
+func (k *KBase) Save(w io.Writer) error {
+	if k == nil {
+		return errors.New("kbase is nil")
+	}
+
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", "  ")
+	return enc.Encode(k.toRAW())
 }
 
 func (k* KBase)HasProperty(objId string, propId string) (bool, error) {
