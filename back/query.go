@@ -49,7 +49,7 @@ func ParseQuery(in string) Query {
 	case isDeleteSelf.MatchString(t):
 		target := isDeleteSelf.FindStringSubmatch(t)
 		return Query{
-			target: target[0],
+			target: strings.TrimRight(target[0], "-"),
 			operator: opDsf,
 			sequence: "",
 		}
@@ -86,7 +86,7 @@ func ParseQuery(in string) Query {
 		if len(parts) != 2 {
 			return Query{}
 		}
-				return Query{
+		return Query{
 			target:   strings.TrimSpace(parts[0]),
 			operator: opAdd,
 			sequence: strings.TrimSpace(parts[1]),

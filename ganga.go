@@ -60,9 +60,9 @@ func main() {
 			return
 		}
 
-		// TODO: logic
 		util.Debug("submitted: %s", raw)
 		util.Debug("valid: %t", back.ValidateQuery(raw))
+		util.Debug("query: %v", back.ParseQuery(raw))
 
 		if err := engine.Create(kb); err != nil {
 			dialog.ShowError(err, w)
