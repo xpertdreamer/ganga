@@ -50,7 +50,7 @@ func main() {
 
 	var queryWin *container.InnerWindow
 
-querySubmitFn := func() {
+	querySubmitFn := func() {
 		if engine.Base == nil || engine.Base.Properties == nil || engine.Base.Objects == nil {
 			util.Error("create base first")
 			dialog.ShowError(errors.New("create base first"), w)

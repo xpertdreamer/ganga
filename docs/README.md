@@ -59,3 +59,9 @@ Program have to presets with different mascots. By default, it uses `gopher`, bu
 ./ganga cat
 ```
 
+To adjust app scaling, run with the environment variable:
+
+```shell
+FYNE_SCALE=<scale> ./ganga <preset>
+```
+
