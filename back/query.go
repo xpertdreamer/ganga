@@ -14,6 +14,7 @@ const (
 	opChg // change
 	opDel // delete
 	opDsf // delete self
+	opCrt // create
 )
 
 var	isPropInsert =
@@ -34,6 +35,9 @@ regexp.MustCompile(`^([\$\%]\w+\-\s*)$`)
 var digit =
 regexp.MustCompile(`\d+`)
 
+var isCreate =
+regexp.MustCompile(`^\s*\@\s*$`)
+
 type QueryRaw struct {
 	target string
 	operator op
@@ -42,7 +46,7 @@ type QueryRaw struct {
 
 func ValidateQuery(in string) bool {
 	return isPropInsert.MatchString(in) || isObjInsert.MatchString(in) ||
-		isChange.MatchString(in) || isDelete.MatchString(in) || isDeleteSelf.MatchString(in)
+		isChange.MatchString(in) || isDelete.MatchString(in) || isDeleteSelf.MatchString(in) || isCreate.MatchString(in)
 }
 
 func ParseQuery(in string) QueryRaw {
@@ -50,6 +54,13 @@ func ParseQuery(in string) QueryRaw {
 	util.Debug("trimmed: %s", t)
 
 	switch {
+	case isCreate.MatchString(t):
+		return QueryRaw{
+			target: "",
+			operator: opCrt,
+			sequence: "",
+		}
+
 	case isDeleteSelf.MatchString(t):
 		target := isDeleteSelf.FindStringSubmatch(t)
 		return QueryRaw{
@@ -113,6 +124,8 @@ func Submit(e *Engine, q QueryRaw) error {
 		return submitDel(e, q)
 	case opDsf:
 		return submitDsf(e, q)
+	case opCrt:
+		return submitCrt(e)
 	}
 	return fmt.Errorf("unknown operator")
 }
@@ -124,6 +137,11 @@ func hasAllKeys[V any](m map[string]V, keys []string) bool {
 		}
 	}
 	return true
+}
+
+func submitCrt(e *Engine) error {
+	e.Base = NewKBase()
+	return nil
 }
 
 func submitAdd(e *Engine, q QueryRaw) error {

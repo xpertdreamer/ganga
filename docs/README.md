@@ -11,8 +11,9 @@ Go-Wanga
 ## TODO:
 
   - comments)
+  - delete query (^)
 
-## Query Language Syntax
+## Query Language Syntax (GQL)
 
 The syntax of this "query language" is pretty straightforward:
 
@@ -21,10 +22,12 @@ The syntax of this "query language" is pretty straightforward:
 - `=` - add
 - `-` - delete
 - `+` - change
+- `@` - create
 
 Example:
 
 ``` perl
+@                           # create new kb
 $1 = "Умеет разговаривать"  # add new property
 $2 = "Умеет петь"           # add new property
 %singer = [1,2] : "Певец"   # (x : y) add new object with properties (x) and name (y) 
