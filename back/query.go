@@ -30,7 +30,7 @@ regexp.MustCompile(`^(\%\w+\s+\-\s+\$\w+)$`)
 var isDeleteSelf =
 regexp.MustCompile(`^([\$\%]\w+\-\s*)$`)
 
-type Query struct {
+type QueryRaw struct {
 	target string
 	operator op
 	sequence string
@@ -41,14 +41,14 @@ func ValidateQuery(in string) bool {
 		isChange.MatchString(in) || isDelete.MatchString(in) || isDeleteSelf.MatchString(in)
 }
 
-func ParseQuery(in string) Query {
+func ParseQuery(in string) QueryRaw {
 	t := strings.TrimSpace(in)
 	util.Debug("trimmed: %s", t)
 
 	switch {
 	case isDeleteSelf.MatchString(t):
 		target := isDeleteSelf.FindStringSubmatch(t)
-		return Query{
+		return QueryRaw{
 			target: strings.TrimRight(target[0], "-"),
 			operator: opDsf,
 			sequence: "",
@@ -56,7 +56,7 @@ func ParseQuery(in string) Query {
 
 	case isChange.MatchString(t):
 		tokens := strings.Fields(t)
-		return Query{
+		return QueryRaw{
 			target: tokens[0],
 			operator: opChg,
 			sequence: tokens[2],
@@ -64,7 +64,7 @@ func ParseQuery(in string) Query {
 
 	case isDelete.MatchString(t):
 		tokens := strings.Fields(t)
-		return Query {
+		return QueryRaw {
 			target: tokens[0],
 			operator: opDel,
 			sequence: tokens[2],
@@ -73,9 +73,9 @@ func ParseQuery(in string) Query {
 	case isObjInsert.MatchString(t):
 		parts := strings.SplitN(t, "=", 2)
 		if len(parts) != 2 {
-			return Query{}
+			return QueryRaw{}
 		}
-		return Query{
+		return QueryRaw{
 			target: strings.TrimSpace(parts[0]),
 			operator: opAdd,
 			sequence: strings.TrimSpace(parts[1]),
@@ -84,14 +84,14 @@ func ParseQuery(in string) Query {
 	case isPropInsert.MatchString(t):
 		parts := strings.SplitN(t, "=", 2)
 		if len(parts) != 2 {
-			return Query{}
+			return QueryRaw{}
 		}
-		return Query{
+		return QueryRaw{
 			target:   strings.TrimSpace(parts[0]),
 			operator: opAdd,
 			sequence: strings.TrimSpace(parts[1]),
 		}
 	}
 
-	return Query{}
+	return QueryRaw{}
 }
