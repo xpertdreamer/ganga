@@ -34,6 +34,9 @@ func main() {
 		if arg == "frog" {
 			argNum = 2
 		}
+		if arg == "turtle" {
+			argNum = 3
+		}
 	}
 	mascotPaths, err := ui.LoadMaskotCache(argNum)
 	if err != nil {

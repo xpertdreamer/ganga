@@ -30,6 +30,10 @@ const (
 	MascotFrogRefl = "maskot_frog_refl.png"
 	MascotFrogHappy = "maskot_frog_happy.png"
 	MascotFrogStab = "maskot_frog_stab.png"
+
+	MascotTurtleRefl = "maskot_turtle_refl.png"
+	MascotTurtleHappy = "maskot_turtle_happy.png"
+	MascotTurtleStab = "maskot_turtle_stab.png"
 )
 
 type Preset struct {
@@ -159,10 +163,17 @@ func LoadMaskotCache(preset uint8) (MascotPaths, error) {
 			{"stable", MascotFrogStab, &cache.Stable},
 		}
 
+	var PresetTurtle = []Preset {
+		{"reflective", MascotTurtleRefl, &cache.Reflective},
+			{"happy", MascotTurtleHappy, &cache.Happy},
+			{"stable", MascotTurtleStab, &cache.Stable},
+		}
+
 	switch preset {
 	case 0: pres = PresetGopher
 	case 1: pres = PresetCat
 	case 2: pres = PresetFrog
+	case 3: pres = PresetTurtle
 	}
 	files := pres
 
